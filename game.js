@@ -105,6 +105,11 @@ const keys = {
 
 window.addEventListener('keydown', (e) => {
   if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true;
+
+  // Check if 'R' is pressed and the game is over
+  if (e.key.toLowerCase() === 'r' && player.isGameOver) {
+    resetGame(); // Reset the game
+  }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -280,6 +285,14 @@ function moveBullets() {
   }
 }
 
+// Check if all NPCs are dead and spawn new enemies if true
+function checkAllNpcsDead() {
+  if (npcs.every(npc => npc.isDead)) {
+    round++;
+    spawnEnemies();
+  }
+}
+
 // Game over function
 function gameOver() {
   player.isGameOver = true;
@@ -287,35 +300,45 @@ function gameOver() {
   gameOverSound.play();
 }
 
-// Restart the game
-function restartGame() {
-  player.health = 100;
-  player.isGameOver = false;
+// Function to reset the game
+function resetGame() {
+  // Reset player properties
   player.x = 100;
   player.y = 300;
+  player.health = 100;
+  player.isGameOver = false;
   player.bullets = [];
-  npcs.length = 0;
-  totalEnemies = 2;
+  player.lastShotTime = 0;
+  player.velocityY = 0;
+
+  // Reset game variables
   round = 1;
+  totalEnemies = 2;
   bossRound = getNextBossRound();
-  spawnEnemies();
-  backgroundMusic.currentTime = 0;
-  backgroundMusic.play();
-  updateGame();
+  npcs.length = 0; // Clear the NPCs array
+  spawnEnemies(); // Spawn initial enemies
+  backgroundMusic.play(); // Resume background music
 }
 
-// Event listener for restarting game
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r' && player.isGameOver) {
-    restartGame();
-  }
-});
-
-// Draw function
-function draw() {
+// Update function
+function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+  if (player.isGameOver) {
+    ctx.font = '48px Arial';
+    ctx.fillStyle = 'white';
+    ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+    ctx.fillText('Press R to Restart', canvas.width / 2 - 150, canvas.height / 2 + 50);
+    return;
+  }
+
+  movePlayer();
+  moveNpcsTowardsPlayer();
+  attackPlayer();
+  shootBullet();
+  moveBullets();
+  checkAllNpcsDead();
 
   // Draw player
   ctx.drawImage(playerSprite, player.x, player.y, player.width, player.height);
@@ -333,45 +356,19 @@ function draw() {
     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
   });
 
-  // Draw platforms
-  ctx.fillStyle = 'black';
-  platforms.forEach(platform => {
-    ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-  });
-
-  // Draw health bar
+  // Draw player health
   ctx.fillStyle = 'red';
-  ctx.fillRect(20, 20, player.health * 2, 20);
-  ctx.strokeStyle = 'black';
-  ctx.strokeRect(20, 20, 200, 20);
-
-  // Draw round number
-  ctx.fillStyle = 'black';
-  ctx.font = '20px Arial';
-  ctx.fillText('Round: ' + round, 20, 60);
-
-  if (player.isGameOver) {
-    ctx.fillStyle = 'red';
-    ctx.font = '50px Arial';
-    ctx.fillText('Game Over! Press "R" to Restart', canvas.width / 2 - 250, canvas.height / 2);
-  }
+  ctx.fillRect(20, 20, 200, 20);
+  ctx.fillStyle = 'green';
+  ctx.fillRect(20, 20, player.health * 2, 20); // 2 pixels per health point
 }
 
-// Main game loop
-function updateGame() {
-  movePlayer();
-  moveNpcsTowardsPlayer();
-  attackPlayer();
-  shootBullet();
-  moveBullets();
-
-  draw();
-
-  if (!player.isGameOver) {
-    requestAnimationFrame(updateGame);
-  }
+// Game loop
+function gameLoop() {
+  update();
+  requestAnimationFrame(gameLoop);
 }
 
 // Start the game
 backgroundMusic.play();
-updateGame();
+gameLoop();
