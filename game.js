@@ -7,9 +7,9 @@ canvas.height = window.innerHeight;
 
 // Laden van afbeeldingen en geluiden
 const playerSprite = new Image();
-playerSprite.src = 'player.png';
+playerSprite.src = 'main.png';
 const enemySprite = new Image();
-enemySprite.src = 'enemy.png';
+enemySprite.src = 'skeleton.png';
 const backgroundImage = new Image();
 backgroundImage.src = 'background.png';
 
@@ -89,7 +89,7 @@ function createNpc(isBoss = false) {
     height: isBoss ? 100 : 50,
     speed: isBoss ? 1.5 : 2 + (currentWave * 0.1),
     health: isBoss ? 500 : 100,
-    attackRange: isBoss ? 150 : 100,
+    attackRange: isBoss ? 200: 00,
     isAttacking: false,
     isDead: false,
     sprite: isBoss ? enemySprite : enemySprite,
